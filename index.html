@@ -72,6 +72,7 @@ input[type=search]{max-width:none;font-size:16px}
 #gate>div{padding:26px 20px}#gate select,#gate input{font-size:16px}
 #stf{margin-top:24px!important}#stf a{display:inline-block;padding:10px 16px;border:1px solid var(--ln);border-radius:10px}
 }
+.pm{width:164px;height:132px;border-radius:26px;background:#fff;border:0;box-shadow:0 14px 34px #00000040;font-size:0}.pm i{display:block;width:124px;height:60px;background:#0099e6;-webkit-mask:var(--wm) center/contain no-repeat;mask:var(--wm) center/contain no-repeat}
 </style></head>
 <body>
 <div class="top"><div class="tl"><div class="lg"></div></div><div class="tc"><small>Pushpak Infra Steel / Workspace</small><b>Welcome to Pushpakian Hub</b></div>
@@ -80,7 +81,7 @@ input[type=search]{max-width:none;font-size:16px}
  <section class="hero"><div class="wm"></div><div class="eb">BUILT ON CLARITY · DRIVEN BY QUALITY</div>
   <h2>A smarter way to work.<br><em>One connected system.</em></h2>
   <p>Welcome to the Pushpak Infra Steel process portal: a central place to access operational workflows, management systems, forms, checklists and learning resources.</p>
-  <div class="hb"><button class="bt g" onclick="go('pr')">Explore Processes ↗</button><button class="bt" onclick="go('rc')">Resource Centre →</button></div><div class="pm">P</div></section>
+  <div class="hb"><button class="bt g" onclick="go('pr')">Explore Processes ↗</button><button class="bt" onclick="go('rc')">Resource Centre →</button></div><div class="pm"><i></i></div></section>
  <div id="demo" class="demo" hidden><b>Demo data.</b> Deploy with Code.gs to show your real Master Sheet.</div>
  <div class="stats" id="stats"></div>
  <h3 class="sh">Departments</h3><p class="sd">Tap a department to filter. The bar shows how many of its processes have their main link added.</p>
@@ -121,15 +122,17 @@ try{CODE=localStorage.getItem('hubcode')||''}catch(e){}
 function ap(){const t=TH[ST.theme]||TH.Classic,r=document.documentElement.style;
  [['--bg',t[0]],['--cd',t[1]],['--ink',INK[ST.ink]||t[2]],['--mut',t[3]],['--ln',t[4]],['--h1',t[5]],['--h2',t[6]],['--ac',AC[ST.acc]],['--ff',FF[ST.font]],['--fs',ST.size+'px']].forEach(([k,v])=>r.setProperty(k,v));
  try{localStorage.setItem('hub',JSON.stringify(ST))}catch(e){}}
-const CL=()=>ROLE=='client'||PV,cov=p=>CL()?(p.form||p.video||p.flow||p.sup):p.fms;
+const CL=()=>ROLE=='client'||PV,cov=p=>CL()?LK.some(([k])=>p[k]):p.fms;
 function grp(L){const b=s=>s.split(/ \(| - /)[0].trim(),B=[...new Set(L.map(p=>b(p.dept)))];L.forEach(p=>{const n=b(p.dept);p.g=B.filter(x=>x!=n&&n.startsWith(x+' ')).sort((a,c)=>a.length-c.length)[0]||n});return L}
+const SHW=[['flow',/flow/],['fms',/f\.?m\.?s|fms/],['pms',/p\.?m\.?s|pms/],['check',/check/],['form',/form/],['video',/video|training/],['copy',/copy/],['sup',/support/],['people',/people|names|contact/]];
+function shr(t){t=String(t||'').trim().toLowerCase();if(/^(yes|y|true|✔|✓)$/.test(t))return['flow','form','video','sup'];if(t=='all')return SHW.map(x=>x[0]);const k=SHW.filter(x=>x[1].test(t)).map(x=>x[0]);return k.length?k:null}
 function build(d){ROLE=d.role||'admin';SEEN=d.seen||'';return grp(build0(d))}function build0(d){
  const ix={};d.heads.forEach((h,i)=>{h=h.toLowerCase().replace(/\s+/g,' ');for(const k in RX)if(!(k in ix)&&RX[k].test(h))ix[k]=i});
  return d.rows.map((r,n)=>{const g=k=>ix[k]==null?{t:'',u:[]}:(r[ix[k]]||{t:'',u:[]});
-  const o={id:n,share:/^(yes|y|true|✔|✓)$/i.test(g('share').t.trim())};['dept','name','purpose','result','pc','solver','exec'].forEach(k=>o[k]=g(k).t.trim());
+  const o={id:n,sh:shr(g('share').t)};o.share=!!o.sh;['dept','name','purpose','result','pc','solver','exec'].forEach(k=>o[k]=g(k).t.trim());
   LK.forEach(([k])=>o[k]=g(k).u[0]||'');return o}).filter(p=>p.name)}
 const U='https://docs.google.com/';
-function d(dept,name,pc,l){return Object.assign({id:0,share:l.includes('share'),dept,name,pc,purpose:'Sample purpose from the Purpose column.',result:'Sample result from the Result column.',solver:'Problem solver',exec:''},Object.fromEntries(LK.map(([k])=>[k,l.includes(k)?U:''])))}
+function d(dept,name,pc,l){return Object.assign({id:0,share:l.includes('share'),sh:l.includes('share')?['flow','form','video','sup']:null,dept,name,pc,purpose:'Sample purpose from the Purpose column.',result:'Sample result from the Result column.',solver:'Problem solver',exec:''},Object.fromEntries(LK.map(([k])=>[k,l.includes(k)?U:''])))}
 const DEMO=[d('EA','Pushpak Delegation Sheet','Pradnya Pandav',['fms','video']),d('Sales - Manoj Sir','Manoj Sir Delegation Sheet','Mahananda',['fms']),
 d('Project','Project Inquiry to PO FMS','Kaveri Bihani',['fms','check','form','copy','share']),d('Project','Project PO to Handover FMS','Kaveri Bihani',['fms','check','form','copy']),
 d('Standing Seam','Standing Seam - JW,OS & S+I FMS Updated','Kaveri Bihani / Pratiksha Chavan',['fms','check','form','copy','video','share']),d('Auto Seamer','Auto Seamer FMS','Kaveri Bihani',['fms','check','form','copy','sup']),
@@ -141,22 +144,22 @@ function load(){
   call(CODE,MODE,r=>{P=build(r);ready()},e=>{$('#cards').innerHTML='<div class="empty"><b>Could not read the sheet.</b><br>'+esc(e.message)+'</div>'});
  }else{P=grp(DEMO);$('#demo').hidden=false;ready()}}
 function ready(){$('#gate').hidden=ROLE!='locked';if(ROLE=='locked')MODE='';$('#gs').textContent=ROLE=='locked'?(SEEN?'Signed in as '+SEEN+', which is not on the staff list. Enter a valid code.':'Please enter a valid access code.'):'';$('#sync').textContent='Refresh';draw()}
-function base(){const L=P.filter(p=>ROLE=='client'||!PV||p.share);return CL()?L.map(p=>{const o=Object.assign({},p);INTERNAL.forEach(k=>o[k]='');return o}):L}
+function base(){const L=P.filter(p=>ROLE=='client'||!PV||p.share);return CL()?L.map(p=>{const o=Object.assign({},p);if(ROLE!='client'){SHW.slice(0,8).forEach(([k])=>{if(!(p.sh||[]).includes(k))o[k]=''});if(!(p.sh||[]).includes('people')){o.pc=o.solver=o.exec=''}}return o}):L}
 function ini(s){return s.split(/[\s\/-]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'•'}
-function btns(p,all){const ks=CL()?LK.filter(x=>!INTERNAL.includes(x[0])):LK;return ks.filter(([k])=>all||p[k]).map(([k,l,i])=>p[k]?`<a class="b ${k=='fms'?'pri':''}" href="${esc(p[k])}" target="_blank" rel="noopener">${i} ${l}</a>`:`<span class="b off">${i} ${l}</span>`).join('')}
+function btns(p,all){const ks=LK;return ks.filter(([k])=>all||p[k]).map(([k,l,i])=>p[k]?`<a class="b ${k=='fms'?'pri':''}" href="${esc(p[k])}" target="_blank" rel="noopener">${i} ${l}</a>`:`<span class="b off">${i} ${l}</span>`).join('')}
 function draw(){
  const B=base(),cl=CL(),depts=[...new Set(B.map(p=>p.g).filter(Boolean))].sort(),col=x=>DC[depts.indexOf(x)%DC.length]||DC[0];
  $('#pi').className=PV?'':'on';$('#pc').className=PV?'on':'';$('#att').hidden=!(ROLE=='admin'&&!PV);$('#seg').hidden=ROLE=='client';$('#stf').hidden=ROLE=='locked';
  $('#stats').innerHTML=[['Processes',B.length],['Departments',depts.length],[cl?'Forms':'F.M.S. links',B.filter(p=>cl?p.form:p.fms).length],['Training videos',B.filter(p=>p.video).length]].map(([a,b])=>`<div class="st"><small>${a}</small><b>${b}</b></div>`).join('');
  $('#depts').innerHTML=`<button class="dp ${!S.dept?'on':''}" style="--c:#14213a" data-d=""><div class="r"><div class="ic">★</div><div class="n">${B.length}</div></div><div><b>All processes</b><small>${depts.length} departments</small></div></button>`+depts.map(x=>{const L=B.filter(p=>p.g==x),n=L.filter(cov).length;return `<button class="dp ${S.dept==x?'on':''}" style="--c:${col(x)}" data-d="${esc(x)}"><div class="r"><div class="ic">${esc(ini(x))}</div><div class="n">${L.length}</div></div><div><b>${esc(x)}</b><small>${n} of ${L.length} with links</small><div class="bar"><i style="width:${Math.round(n*100/L.length)}%"></i></div></div></button>`}).join('');
- const qk=(cl?['form','video','flow','sup']:['fms','form','check','video','sup']).filter(k=>B.some(p=>p[k]));
+ const qk=['fms','pms','flow','check','form','video','copy','sup'].filter(k=>B.some(p=>p[k]));
  $('#qa').innerHTML=`<button class="chip ${!S.has?'on':''}" data-h="">All</button>`+qk.map(k=>{const x=LK.find(y=>y[0]==k);return `<button class="chip ${S.has==k?'on':''}" data-h="${k}">${x[2]} ${x[1]}<em>${B.filter(p=>p[k]).length}</em></button>`}).join('');
  const miss=B.filter(p=>!p.fms);$('#atl').innerHTML=miss.length?miss.map(p=>`<button class="b" onclick="openD(${p.id})">${esc(p.name)} · no F.M.S.</button>`).join(''):'<span class="none">Every process has an F.M.S. link.</span>';
  const q=S.q.toLowerCase(),L=B.filter(p=>(!S.dept||p.g==S.dept)&&(!S.has||p[S.has])&&(!q||(p.name+' '+p.dept+' '+p.pc+' '+p.solver).toLowerCase().includes(q)));
- $('#cards').innerHTML=L.length?L.map(p=>`<article class="cd" style="--c:${col(p.g)}"><div><small>${esc(p.dept)}</small>${ROLE=='admin'&&!PV&&p.share?'<span class="tag">Shared with clients</span>':''}</div><h4>${esc(p.name)}</h4>${!cl&&p.pc?`<div class="own">${esc(p.pc)}</div>`:''}<div class="acts">${btns(p)||'<span class="none">No links added yet</span>'}</div><div><button class="b" onclick="openD(${p.id})">Details</button></div></article>`).join(''):'<div class="empty">Nothing matches. Clear the search or pick another department.</div>';
+ $('#cards').innerHTML=L.length?L.map(p=>`<article class="cd" style="--c:${col(p.g)}"><div><small>${esc(p.dept)}</small>${ROLE=='admin'&&!PV&&p.share?'<span class="tag">Shared with clients</span>':''}</div><h4>${esc(p.name)}</h4>${p.pc?`<div class="own">${esc(p.pc)}</div>`:''}<div class="acts">${btns(p)||'<span class="none">No links added yet</span>'}</div><div><button class="b" onclick="openD(${p.id})">Details</button></div></article>`).join(''):'<div class="empty">Nothing matches. Clear the search or pick another department.</div>';
 }
 function openD(id){const p=base().find(x=>x.id==id),r=(t,v)=>v?`<dt>${t}</dt><dd>${esc(v)}</dd>`:'';
- $('#dr').innerHTML=`<button class="b" onclick="closeD()" style="float:right">Close</button><small>${esc(p.dept)}</small><h3>${esc(p.name)}</h3><dl>${r('Purpose',p.purpose)}${r('Result',p.result)}${CL()?'':r('Process coordinator (P.C)',p.pc)+r('Problem solver',p.solver)+r('Executive',p.exec)}</dl><dt>Links${CL()?'':' (dashed = not added in the sheet yet)'}</dt><div class="acts">${btns(p,1)}</div>`;
+ $('#dr').innerHTML=`<button class="b" onclick="closeD()" style="float:right">Close</button><small>${esc(p.dept)}</small><h3>${esc(p.name)}</h3><dl>${r('Purpose',p.purpose)}${r('Result',p.result)}${r('Process coordinator (P.C)',p.pc)+r('Problem solver',p.solver)+r('Executive',p.exec)}</dl><dt>Links${CL()?'':' (dashed = not added in the sheet yet)'}</dt><div class="acts">${btns(p,1)}</div>`;
  document.body.classList.add('open')}
 function sw(items,key,fn){return '<div class="sw">'+items.map(i=>`<button class="b ${ST[key]==i?'on':''}" onclick="ST.${key}=${typeof i=='number'?i:`'${i}'`};ap();setg()">${fn?fn(i):i}</button>`).join('')+'</div>'}
 function setg(){$('#dr').innerHTML=`<button class="b" onclick="closeD()" style="float:right">Close</button><h3>Settings</h3><dt>Theme</dt>${sw(Object.keys(TH),'theme',i=>`<span class="dot" style="background:${TH[i][5]}"></span>${i}`)}<dt>Accent colour</dt>${sw(Object.keys(AC),'acc',i=>`<span class="dot" style="background:${AC[i]}"></span>${i}`)}<dt>Text colour</dt>${sw(Object.keys(INK),'ink',i=>`<span class="dot" style="background:${INK[i]||'var(--ink)'}"></span>${i}`)}<dt>Font</dt>${sw(Object.keys(FF),'font')}<dt>Text size</dt>${sw([13,14,16,18],'size',i=>i+'px')}<button class="b" onclick="ST=Object.assign({},DEF);ap();setg()">Reset to default</button>`;
