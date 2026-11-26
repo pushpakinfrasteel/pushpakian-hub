@@ -74,6 +74,8 @@ input[type=search]{max-width:none;font-size:16px}
 }
 .pm{width:164px;height:132px;border-radius:26px;background:#fff;border:0;box-shadow:0 14px 34px #00000040;font-size:0}.pm i{display:block;width:124px;height:60px;background:#0099e6;-webkit-mask:var(--wm) center/contain no-repeat;mask:var(--wm) center/contain no-repeat}
 h3.sh{border-left:4px solid var(--ac);padding-left:10px}.st{border-top:3px solid var(--ac)}
+#gate .ck{display:flex;align-items:center;gap:8px;margin:8px 0 0;font-size:.92em;color:var(--mut);text-align:left;cursor:pointer}#gate .ck input{width:18px;height:18px;margin:0;padding:0;letter-spacing:normal;accent-color:var(--h2)}
+#stf{font-size:1.2em}#stf a{display:inline-block;font-size:1em;font-weight:700;color:var(--h2);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px;padding:10px 22px;border-radius:12px;background:color-mix(in srgb,var(--ac) 22%,var(--cd));border:1px solid color-mix(in srgb,var(--ac) 55%,var(--ln));transition:background .15s}#stf a:hover{background:var(--ac);color:#12233f}
 </style></head>
 <body>
 <div class="top"><div class="tl"><div class="lg"></div></div><div class="tc"><small>Pushpak Infra Steel / Workspace</small><b>Welcome to Pushpakian Hub</b></div>
@@ -98,6 +100,7 @@ h3.sh{border-left:4px solid var(--ac);padding-left:10px}.st{border-top:3px solid
 <div id="gate" hidden><div><div class="lg"></div><h3>Pushpakian Hub</h3><span class="own">Choose how you want to open the Hub</span>
 <select id="gm" onchange="gmode()"><option value="admin">Admin Access</option><option value="staff">Pushpakian Access</option><option value="client" selected>Client Access</option></select>
 <input id="gc" type="password" placeholder="Access code" autocomplete="off" hidden onkeydown="if(event.key=='Enter')unlock()">
+<label class="ck" id="gpl" hidden><input type="checkbox" id="gp" onchange="$('#gc').type=this.checked?'text':'password'"> Show password</label><label class="ck"><input type="checkbox" id="gk" checked> Keep me signed in on this device</label>
 <p class="own" id="gs" style="margin:8px 0 0"></p><button onclick="unlock()">Continue</button><p id="ge"></p></div></div>
 <script>
 const GS=typeof google!=='undefined'&&google.script&&google.script.run;
@@ -120,7 +123,7 @@ const DEF={hero:'Green',theme:'Pushpak Blue',acc:'Gold',ink:'Auto',font:'Modern'
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 let MODE='',SEEN='',P=[],S={q:'',dept:'',has:''},ROLE='admin',PV=0,CODE='',ST=Object.assign({},DEF);
 try{Object.assign(ST,JSON.parse(localStorage.getItem('hub')||'{}'))}catch(e){}
-try{CODE=localStorage.getItem('hubcode')||''}catch(e){}
+CODE=sget('hubcode');
 function ap(){const t=TH[ST.theme]||TH.Classic,r=document.documentElement.style;
  [['--bg',t[0]],['--cd',t[1]],['--ink',INK[ST.ink]||t[2]],['--mut','color-mix(in srgb,var(--ink) 62%,var(--bg))'],['--ln',t[4]],['--h1',t[5]],['--h2',t[6]],['--ac',AC[ST.acc]],['--ff',(FF[ST.font]||FF.Modern)[0]],['--hf',(FF[ST.font]||FF.Modern)[1]],['--fs',ST.size+'px'],['--g1',(HERO[ST.hero]||HERO.Green)[0]],['--g2',(HERO[ST.hero]||HERO.Green)[1]]].forEach(([k,v])=>r.setProperty(k,v));
  try{localStorage.setItem('hub',JSON.stringify(ST))}catch(e){}}
@@ -145,7 +148,7 @@ function load(){
  if(LIVE){$('#sync').textContent='Loading…';
   call(CODE,MODE,r=>{P=build(r);ready()},e=>{$('#cards').innerHTML='<div class="empty"><b>Could not read the sheet.</b><br>'+esc(e.message)+'</div>'});
  }else{P=grp(DEMO);$('#demo').hidden=false;ready()}}
-function ready(){$('#gate').hidden=ROLE!='locked';if(ROLE=='locked')MODE='';$('#gs').textContent=ROLE=='locked'?(SEEN?'Signed in as '+SEEN+', which is not on the staff list. Enter a valid code.':'Please enter a valid access code.'):'';$('#sync').textContent='Refresh';draw()}
+function ready(){$('#gate').hidden=ROLE!='locked';if(ROLE=='locked'){MODE='';forget()}$('#gs').textContent=ROLE=='locked'?(SEEN?'Signed in as '+SEEN+', which is not on the staff list. Enter a valid code.':'Please enter a valid access code.'):'';$('#sync').textContent='Refresh';draw()}
 function base(){const L=P.filter(p=>ROLE=='client'||!PV||!p.hide);return CL()?L.map(p=>{const o=Object.assign({},p);if(ROLE!='client'){SHW.slice(0,8).forEach(([k])=>{if(!(p.sh||[]).includes(k))o[k]=''});if(!(p.sh||[]).includes('people')){o.pc=o.solver=o.exec=''}}return o}):L}
 function ini(s){return s.split(/[\s\/-]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'•'}
 function btns(p,all){const ks=LK;return ks.filter(([k])=>all||p[k]).map(([k,l,i])=>p[k]?`<a class="b ${k=='fms'?'pri':''}" href="${esc(p[k])}" target="_blank" rel="noopener">${i} ${l}</a>`:`<span class="b off">${i} ${l}</span>`).join('')}
@@ -166,11 +169,13 @@ function openD(id){const p=base().find(x=>x.id==id),r=(t,v)=>v?`<dt>${t}</dt><dd
 function sw(items,key,fn){return '<div class="sw">'+items.map(i=>`<button class="b ${ST[key]==i?'on':''}" onclick="ST.${key}=${typeof i=='number'?i:`'${i}'`};ap();setg()">${fn?fn(i):i}</button>`).join('')+'</div>'}
 function setg(){$('#dr').innerHTML=`<button class="b" onclick="closeD()" style="float:right">Close</button><h3>Settings</h3><dt>Theme</dt>${sw(Object.keys(TH),'theme',i=>`<span class="dot" style="background:${TH[i][5]}"></span>${i}`)}<dt>Banner colour</dt>${sw(Object.keys(HERO),'hero',i=>`<span class="dot" style="background:${HERO[i][1]}"></span>${i}`)}<dt>Accent colour</dt>${sw(Object.keys(AC),'acc',i=>`<span class="dot" style="background:${AC[i]}"></span>${i}`)}<dt>Text colour</dt>${sw(Object.keys(INK),'ink',i=>`<span class="dot" style="background:${INK[i]||'var(--ink)'}"></span>${i}`)}<dt>Font</dt>${sw(Object.keys(FF),'font')}<dt>Text size</dt>${sw([13,14,16,18],'size',i=>i+'px')}<button class="b" onclick="ST=Object.assign({},DEF);ap();setg()">Reset to default</button>`;
  document.body.classList.add('open')}
-function gmode(){$('#gc').hidden=$('#gm').value=='client';$('#ge').textContent=''}
+function sget(k){try{return localStorage.getItem(k)||sessionStorage.getItem(k)||''}catch(e){return ''}}
+function forget(){try{['hubmode','hubcode'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)})}catch(e){}}
+function gmode(){const c=$('#gm').value=='client';$('#gc').hidden=c;$('#gpl').hidden=c;$('#gc').type='password';$('#gp').checked=false;$('#gk').checked=c;$('#ge').textContent=''}
 function unlock(){MODE=$('#gm').value;CODE=MODE=='client'?'':$('#gc').value.trim();$('#ge').textContent='Checking…';
- call(CODE,MODE,r=>{if(r.role=='locked'){$('#ge').textContent=MODE=='client'?'Client access is not available right now.':'That code is not valid.';return}try{localStorage.setItem('hubmode',MODE);localStorage.setItem('hubcode',CODE)}catch(e){}P=build(r);PV=0;ready()},e=>{$('#ge').textContent=e.message})}
-function start(){if(!LIVE){load();return}try{MODE=localStorage.getItem('hubmode')||''}catch(e){}MODE?load():showGate()}
-function showGate(){$('#gc').value='';$('#ge').textContent='';$('#gate').hidden=false;gmode()}
+ call(CODE,MODE,r=>{if(r.role=='locked'){$('#ge').textContent=MODE=='client'?'Client access is not available right now.':'That code is not valid.';return}forget();try{const K=$('#gk').checked?localStorage:sessionStorage;K.setItem('hubmode',MODE);K.setItem('hubcode',CODE)}catch(e){}P=build(r);PV=0;ready()},e=>{$('#ge').textContent=e.message})}
+function start(){if(!LIVE){load();return}MODE=sget('hubmode');MODE?load():showGate()}
+function showGate(){forget();$('#gc').value='';$('#ge').textContent='';$('#gate').hidden=false;gmode()}
 function pv(v){PV=v;S={q:S.q,dept:'',has:''};draw()}
 function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'})}
 function closeD(){document.body.classList.remove('open')}
